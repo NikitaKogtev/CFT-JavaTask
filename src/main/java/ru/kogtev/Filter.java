@@ -1,13 +1,9 @@
 package ru.kogtev;
 
 import java.io.*;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Hello world!
- */
 public class Filter {
 
     private int amountLong = 0;
@@ -24,7 +20,6 @@ public class Filter {
     private int amountStrings = 0;
     private int maxString;
     private int minString;
-
     String filePrefix;
     boolean appendToFile;
     boolean fullStatistics;
@@ -109,11 +104,12 @@ public class Filter {
         avgLong = (double) sumLong / amountLong;
         avgDouble = sumDouble / amountDouble;
 
-        writeFile("integers.txt", longs);
-        writeFile("floats.txt", doubles);
-        writeFile("strings.txt", strings);
+        getStatistic();
 
-        System.out.println(amountStrings);
+        writeFile(outputDirectory, filePrefix, "integers.txt", appendToFile, longs);
+        writeFile(outputDirectory, filePrefix, "floats.txt", appendToFile, doubles);
+        writeFile(outputDirectory, filePrefix, "strings.txt", appendToFile, strings);
+
     }
 
 
@@ -132,8 +128,10 @@ public class Filter {
         return inputFiles;
     }
 
-    public void writeFile(String outputFile, List<String> type) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+    public void writeFile(String outputDirectory, String filePrefix,
+                          String fileName, boolean appendToFile, List<String> type) throws IOException {
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputDirectory + filePrefix + fileName, appendToFile));
 
         for (String x : type) {
             writer.write(x);
@@ -177,12 +175,47 @@ public class Filter {
         }
     }
 
+    public void getStatistic() {
+        if (isShortStatistics()) {
+            System.out.println("Количество элементов записанных в {" +
+                    "integers.txt = " + amountLong +
+                    ", floats.txt =" + amountDouble +
+                    ", strings.txt =" + amountStrings +
+                    '}');
+        }
+        if (isFullStatistics()) {
+            System.out.println("Количество элементов записанных в {" +
+                    "integers.txt = " + amountLong +
+                    ", floats.txt =" + amountDouble +
+                    ", strings.txt =" + amountStrings +
+                    "\n" +
+                    "Минимальное значение элементов в {" +
+                    "integers.txt = " + minLong +
+                    ", floats.txt = " + minDouble +
+                    ", strings.txt = " + minString +
+                    "\n" +
+                    "Максимальное значение элементов в {" +
+                    "integers.txt = " + maxLong +
+                    ", floats.txt = " + maxDouble +
+                    ", strings.txt = " + maxString +
+                    "\n" +
+                    "Сумма значений элементов в {" +
+                    "integers.txt = " + sumLong +
+                    ", floats.txt = " + sumDouble +
+                    "\n" +
+                    "Среднее значений элементов в {" +
+                    "integers.txt = " + avgLong +
+                    ", floats.txt = " + avgDouble +
+                    '}');
+        }
+    }
 
+    public boolean isFullStatistics() {
+        return fullStatistics;
+    }
 
-    public void getStatistic(boolean fullStatistics, boolean shortStatistics) {
-       if (shortStatistics) {
-
-       }
+    public boolean isShortStatistics() {
+        return shortStatistics;
     }
 }
 
