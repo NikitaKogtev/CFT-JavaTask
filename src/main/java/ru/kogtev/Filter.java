@@ -20,6 +20,11 @@ public class Filter {
     private int amountStrings = 0;
     private int maxString;
     private int minString;
+    private boolean isFirstLong = true;
+    private boolean isFirstDouble = true;
+    private boolean isFirstString = true;
+    private long parsedLong;
+    private double parsedDouble;
     String filePrefix;
     boolean appendToFile;
     boolean fullStatistics;
@@ -46,74 +51,37 @@ public class Filter {
         List<String> doubles = new ArrayList<>();
         List<String> strings = new ArrayList<>();
 
-        boolean isFirstLong = true;
-        boolean isFirstDouble = true;
-        boolean isFirstString = true;
 
         for (String s : filesValue) {
 
-            try {
-                long value = Long.parseLong(s);
-
-                if (fullStatistics) {
-                    getLongStatistic(value, isFirstLong);
-                }
-
+            if (tryParseLong(s)) {
+                getLongStatistic(parsedLong);
                 longs.add(s);
-                isFirstLong = false;
-
-                if (shortStatistics || fullStatistics) {
-                    amountLong++;
-                }
-
                 continue;
-            } catch (NumberFormatException ignored) {
             }
 
-            try {
-                double value = Double.parseDouble(s);
-                if (fullStatistics) {
-                    getDoubleStatistic(value, isFirstDouble);
-                }
-
+            if (tryParseDouble(s)) {
+                getDoubleStatistic(parsedDouble);
                 doubles.add(s);
-                isFirstDouble = false;
-
-                if (shortStatistics || fullStatistics) {
-                    amountDouble++;
-                }
                 continue;
-            } catch (NumberFormatException ignored) {
             }
 
-
-            if (fullStatistics) {
-                getStringStatistic(s, isFirstString);
-            }
-
+            getStringStatistic(s);
             strings.add(s);
-
-            isFirstDouble = false;
-
-            if (shortStatistics || fullStatistics) {
-                amountStrings++;
-            }
-
         }
 
         avgLong = (double) sumLong / amountLong;
         avgDouble = sumDouble / amountDouble;
 
-        getStatistic();
+        printStatistic();
 
-        writeFile(outputDirectory, filePrefix, "integers.txt", appendToFile, longs);
-        writeFile(outputDirectory, filePrefix, "floats.txt", appendToFile, doubles);
-        writeFile(outputDirectory, filePrefix, "strings.txt", appendToFile, strings);
+        writeFile("integers.txt", longs);
+        writeFile("floats.txt", doubles);
+        writeFile("strings.txt", strings);
 
     }
 
-
-    public List<String> readFile(String inputFile) throws IOException {
+    private List<String> readFile(String inputFile) throws IOException {
 
         List<String> inputFiles = new ArrayList<>();
 
@@ -128,8 +96,26 @@ public class Filter {
         return inputFiles;
     }
 
-    public void writeFile(String outputDirectory, String filePrefix,
-                          String fileName, boolean appendToFile, List<String> type) throws IOException {
+    private boolean tryParseLong(String value) {
+        try {
+            parsedLong = Long.parseLong(value);
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean tryParseDouble(String value) {
+        try {
+            parsedDouble = Double.parseDouble(value);
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+        return true;
+    }
+
+
+    private void writeFile(String fileName, List<String> type) throws IOException {
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputDirectory + filePrefix + fileName, appendToFile));
 
@@ -140,50 +126,68 @@ public class Filter {
         writer.close();
     }
 
-    public void getLongStatistic(long value, boolean isFirstLong) {
-        if (isFirstLong) {
-            maxLong = value;
-            minLong = value;
-        } else if (value > maxLong) {
-            maxLong = value;
-        } else if (value < minLong) {
-            minLong = value;
-        }
-        sumLong += value;
-    }
-
-    public void getDoubleStatistic(double value, boolean isFirstDouble) {
-        if (isFirstDouble) {
-            maxDouble = value;
-            minDouble = value;
-        } else if (value > maxDouble) {
-            maxDouble = value;
-        } else if (value < minDouble) {
-            minDouble = value;
-        }
-        sumDouble += value;
-    }
-
-    public void getStringStatistic(String value, boolean isFirstString) {
-        if (isFirstString) {
-            maxString = value.length();
-            minDouble = value.length();
-        } else if (value.length() > maxString) {
-            maxDouble = value.length();
-        } else if (value.length() < minString) {
-            minString = value.length();
+    private void getLongStatistic(long value) {
+        if (fullStatistics || shortStatistics) {
+            if (fullStatistics) {
+                if (isFirstLong) {
+                    maxLong = value;
+                    minLong = value;
+                    isFirstLong = false;
+                } else if (value > maxLong) {
+                    maxLong = value;
+                } else if (value < minLong) {
+                    minLong = value;
+                }
+                sumLong += value;
+            }
+            amountLong++;
         }
     }
 
-    public void getStatistic() {
-        if (isShortStatistics()) {
+    private void getDoubleStatistic(double value) {
+        if (fullStatistics || shortStatistics) {
+            if (fullStatistics) {
+                if (isFirstDouble) {
+                    maxDouble = value;
+                    minDouble = value;
+                    isFirstDouble = false;
+                } else if (value > maxDouble) {
+                    maxDouble = value;
+                } else if (value < minDouble) {
+                    minDouble = value;
+                }
+                sumDouble += value;
+            }
+            amountDouble++;
+        }
+    }
+
+    private void getStringStatistic(String value) {
+        if (fullStatistics || shortStatistics) {
+            if (fullStatistics) {
+                if (isFirstString) {
+                    maxString = value.length();
+                    minString = value.length();
+                } else if (value.length() > maxString) {
+                    maxString = value.length();
+                } else if (value.length() < minString) {
+                    minString = value.length();
+                }
+            }
+            amountStrings++;
+        }
+    }
+
+
+    private void printStatistic() {
+        if (shortStatistics) {
             System.out.println("Количество элементов записанных в {" +
                     "integers.txt = " + amountLong +
                     ", floats.txt =" + amountDouble +
                     ", strings.txt =" + amountStrings +
                     '}');
         }
-        if (isFullStatistics()) {
+        if (fullStatistics) {
             System.out.println("Количество элементов записанных в {" +
                     "integers.txt = " + amountLong +
                     ", floats.txt =" + amountDouble +
@@ -210,14 +214,6 @@ public class Filter {
         }
     }
 
-    public boolean isFullStatistics() {
-        return fullStatistics;
-    }
-
-    public boolean isShortStatistics() {
-        return shortStatistics;
-    }
 }
-
 
 
