@@ -25,10 +25,10 @@ public class Filter {
     private boolean isFirstString = true;
     private long parsedLong;
     private double parsedDouble;
-    String filePrefix;
-    boolean appendToFile;
-    boolean fullStatistics;
-    boolean shortStatistics;
+    private String filePrefix;
+    private boolean appendToFile;
+    private boolean fullStatistics;
+    private boolean shortStatistics;
 
     public Filter(String outputDirectory, String filePrefix, boolean appendToFile, boolean fullStatistics, boolean shortStatistics) {
         this.outputDirectory = outputDirectory;
